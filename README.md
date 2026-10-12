@@ -4,7 +4,8 @@ A complete theme for **NetherUI**: ancient bronze reliquary, navy obsidian and p
 
 - **NetherUI:** panels, borders, window frames, title plates, buttons, tabs, widgets, bars,
   portrait rings, crests, minimap border, icons and NetherUI's Light, all replaced with the
-  Relic's own artwork, plus the Relic colour palette.
+  Relic's own artwork, plus the Relic colour palette and its typeface, Philosopher Bold (also
+  used by every Nether addon that takes its fonts from NetherUI).
 - **NetherBars (optional):** the approved painted Relic plates for NetherBars' unit frames
   (player, target, focus, pet, target of target) and nameplates (normal, elite, rare), the
   horned elite bar with a chevron for elite, boss and rare targets, and the Triad Crown over

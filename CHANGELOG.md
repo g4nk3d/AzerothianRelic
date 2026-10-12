@@ -1,6 +1,18 @@
 # Azerothian Relic changelog
 
 
+## 1.0.1
+- A full game restart is needed for this update (the version number is read at startup).
+- Philosopher Bold is the Relic's typeface: window titles, settings, body text and numbers in
+  NetherUI, and every Nether addon that takes its fonts from NetherUI (the NetherMaps arrow,
+  the NetherQuester tracker on "Theme fonts", NetherChat, NetherMeters and more). Switching to
+  another theme puts NetherUI's own fonts back. Korean and Chinese clients keep the game's font.
+- The mailbox and the open letter draw over the Relic's big corners, so Prev, Next and the
+  letter's buttons can be clicked.
+- The square minimap's border closes the last gap: the map now runs under the rim, so no thin
+  line of the world shows between them.
+- Centred window titles (such as the mailbox's "Inbox") come with NetherUI 2.0.30.
+
 ## 1.0.0
 - First release: the Azerothian Relic theme for NetherUI (176 NetherUI textures replaced,
   37 extra pieces registered by name, the Relic palette) and the matching look for NetherBars'

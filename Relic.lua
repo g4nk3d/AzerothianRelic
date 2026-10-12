@@ -305,10 +305,10 @@ end)
 -- The square minimap border: Nether's own art is a thin frame at the texture's edge, so NetherUI
 -- draws it 5 pixels outside the map. The Relic's frame is broad, with its opening 28 of 256 pixels
 -- in from each side. While the Relic is on, the border is sized so its opening covers the map's
--- edge by 2 pixels all round (the frame's rim sits over the map, never a gap between them); off,
+-- edge by 5 pixels all round (the frame's rim sits over the map, never a gap between them); off,
 -- or round: NetherUI's own placement again.
 local MINIMAP_OPEN = 1 - 2 * 28 / 256
-local MINIMAP_OVERLAP = 2
+local MINIMAP_OVERLAP = 5    -- 2 still left a hairline of world showing between the map and the rim
 function Relic:FitMinimap()
 	local S = A.Skins
 	local fr = S and S.minimapFrame
@@ -326,11 +326,14 @@ function Relic:FitMinimap()
 	fr:SetPoint("TOPLEFT", M, "TOPLEFT", -off, off)
 	fr:SetPoint("BOTTOMRIGHT", M, "BOTTOMRIGHT", off, -off)
 end
--- Quest giver windows: the Relic's ornate corners are large, and NetherUI draws the ornate
--- border over the whole window, so the corners covered Accept, Decline and Complete. While the
--- Relic is on, these windows draw their contents over the border (as the spellbook's page sits
--- over its border); off, NetherUI's own order again (border on top).
-local UNDER_BORDER = { "QuestFrame", "GossipFrame" }
+-- Quest giver and mail windows: the Relic's ornate corners are large, and NetherUI draws the
+-- ornate border over the whole window, so the corners covered Accept, Decline and Complete, and
+-- the mailbox's Prev and Next (and the open letter's Reply, Delete and Close). While the Relic is
+-- on, these windows draw their contents over the border (as the spellbook's page sits over its
+-- border); off, NetherUI's own order again (border on top).
+local UNDER_BORDER = { "QuestFrame", "GossipFrame", "MailFrame", "OpenMailFrame" }
+local UNDER = {}
+for _, name in ipairs(UNDER_BORDER) do UNDER[name] = true end
 function Relic:LayerQuestWindows()
 	for _, name in ipairs(UNDER_BORDER) do
 		local f = rawget(_G, name)
@@ -344,10 +347,109 @@ A:RegisterCallback("THEME_CHANGED", function() Relic:FitMinimap(); Relic:LayerQu
 if A.Skins and type(A.Skins.Window) == "function" then
 	hooksecurefunc(A.Skins, "Window", function(_, f)
 		local n = f and f.GetName and f:GetName()
-		if n == "QuestFrame" or n == "GossipFrame" then Relic:LayerQuestWindows() end
+		if n and UNDER[n] then Relic:LayerQuestWindows() end
 	end)
 end
 if type(A.SetMinimapShape) == "function" then hooksecurefunc(A, "SetMinimapShape", function() Relic:FitMinimap() end) end
+
+-- The Relic's typeface: Philosopher Bold for every NetherUI text (body, numbers and window
+-- titles), and so for every Nether addon that follows NetherUI's fonts (the NetherMaps arrow,
+-- the NetherQuester tracker on "Theme fonts", NetherChat, NetherMeters...). The font ships
+-- with NetherUI (NetherUI_Media). Latin and Cyrillic clients only: Philosopher has no Korean
+-- or Chinese letters, so those clients keep the game's fonts.
+-- On: NetherUI's font table points at Philosopher and every text NetherUI has already drawn
+-- in one of its own fonts is moved over. Off: the reverse, one frame later, so a theme that
+-- brings its own fonts (PRISM) has set them first and only what is still the Relic's goes back.
+local RELIC_FONT = "Interface\\AddOns\\NetherUI_Media\\Fonts\\Philosopher-Bold.ttf"
+local FONT_KINDS = { "body", "number", "header" }
+local FONT_LOCALES = { enUS = true, enGB = true, deDE = true, frFR = true, esES = true, esMX = true,
+	ptBR = true, itIT = true, ruRU = true }
+local ORIGINAL_FONTS = {}
+for _, k in ipairs(FONT_KINDS) do ORIGINAL_FONTS[k] = A.fonts and A.fonts[k] end
+local fontSeen = setmetatable({}, { __mode = "k" })
+if type(A.Font) == "function" then
+	hooksecurefunc(A, "Font", function(_, fs, kind) if fs then fontSeen[fs] = kind or "body" end end)
+end
+local function FontsOK()
+	local loc = GetLocale and GetLocale() or "enUS"
+	return type(A.fonts) == "table" and FONT_LOCALES[loc] and _G.NetherFont and true or false
+end
+-- move every known NetherUI text from one font file to another: to(path, kind) gives the new
+-- file, or nil to leave the text alone (kind: what NetherUI asked for, when we saw it asked)
+local function Remap(to)
+	local NF = _G.NetherFont
+	local done = {}
+	local function One(fs)
+		if done[fs] or type(fs) ~= "table" or fs.netherOwnFont then return end
+		done[fs] = true
+		local ok, p, size, flags = pcall(NF.GetFont, NF, fs)
+		local new = ok and type(p) == "string" and to(p:lower(), fontSeen[fs])
+		if new and type(size) == "number" then NF:Apply(fs, new, size, flags or "") end
+	end
+	for fs in pairs(fontSeen) do One(fs) end
+	for _, t in ipairs({ A.panelText, A.headerText }) do
+		if type(t) == "table" then for fs in pairs(t) do One(fs) end end
+	end
+end
+function Relic:ApplyFonts()
+	if not FontsOK() then return end
+	local map = {}
+	for _, k in ipairs(FONT_KINDS) do
+		local cur = A.fonts[k]
+		if type(cur) == "string" and cur ~= RELIC_FONT then
+			-- remember what NetherUI used (the Cinzel title option may have changed the header)
+			ORIGINAL_FONTS[k] = cur
+			map[cur:lower()] = RELIC_FONT
+		end
+		A.fonts[k] = RELIC_FONT
+	end
+	if next(map) then Remap(function(p) return map[p] end) end
+	if A.ApplyHeaderFont then pcall(A.ApplyHeaderFont, A) end
+end
+function Relic:RestoreFonts()
+	if not FontsOK() then return end
+	local back = {}
+	for _, k in ipairs(FONT_KINDS) do
+		if A.fonts[k] == RELIC_FONT then A.fonts[k] = ORIGINAL_FONTS[k] or A.fonts.body end
+		back[k] = A.fonts[k]
+	end
+	-- the title font is NetherUI's own choice again (Morpheus, or Cinzel when that option is on)
+	local Light = A.Light
+	if Light and type(Light.ApplyTitleFont) == "function" then pcall(Light.ApplyTitleFont, Light) end
+	back.header = A.fonts.header
+	-- texts still on the Relic's font go back to NetherUI's font of their kind (headers came back above)
+	local relic = RELIC_FONT:lower()
+	Remap(function(p, kind)
+		if p ~= relic then return nil end
+		local f = back[kind or "body"] or back.body
+		return f ~= RELIC_FONT and f or nil
+	end)
+end
+A:RegisterCallback("THEME_CHANGED", function()
+	if Relic:Active() then
+		Relic:ApplyFonts()
+	elseif C_Timer and C_Timer.After then
+		C_Timer.After(0, function() if not Relic:Active() then Relic:RestoreFonts() end end)
+	else
+		Relic:RestoreFonts()
+	end
+end)
+-- NetherUI's "Cinzel titles" option sets the title font: while the Relic is on, it stays Philosopher
+if A.Light and type(A.Light.ApplyTitleFont) == "function" then
+	hooksecurefunc(A.Light, "ApplyTitleFont", function()
+		if Relic:Active() and FontsOK() and A.fonts.header ~= RELIC_FONT then
+			ORIGINAL_FONTS.header = A.fonts.header
+			A.fonts.header = RELIC_FONT
+			if A.ApplyHeaderFont then pcall(A.ApplyHeaderFont, A) end
+		end
+	end)
+end
+-- the saved theme is the Relic: point NetherUI's fonts at Philosopher now, before the windows
+-- and the other Nether addons are built at login
+do
+	local saved = rawget(_G, "NetherUIDB") and NetherUIDB.theme
+	if saved == KEY then Relic:ApplyFonts() end
+end
 
 -- (only our own entry is added to the game's popup table; the table itself is never assigned, which
 -- would taint it and get the Relic blamed for blocked actions in the game's own windows)

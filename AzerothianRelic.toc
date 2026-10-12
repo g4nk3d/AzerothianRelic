@@ -2,7 +2,7 @@
 ## Title: |cffc9a45cAzerothian|r |cff3a5fb8Relic|r
 ## Notes: A complete theme for NetherUI: ancient bronze reliquary, navy obsidian and polished lapis. Matching nameplate theme for NetherBars. Requires NetherUI.
 ## Author: NetherUI
-## Version: 1.0.0
+## Version: 1.0.1
 ## Category: Interface Enhancements
 ## Group: NetherUI
 ## IconTexture: Interface\AddOns\AzerothianRelic\Media\Icon
