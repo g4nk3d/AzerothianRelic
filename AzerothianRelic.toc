@@ -1,0 +1,24 @@
+## Interface: 16001, 120105, 120100, 120001, 120000
+## Title: |cffc9a45cAzerothian|r |cff3a5fb8Relic|r
+## Notes: A complete theme for NetherUI: ancient bronze reliquary, navy obsidian and polished lapis. Matching nameplate theme for NetherBars. Requires NetherUI.
+## Author: NetherUI
+## Version: 1.0.0
+## Category: Interface Enhancements
+## Group: NetherUI
+## IconTexture: Interface\AddOns\AzerothianRelic\Media\Icon
+## Dependencies: NetherUI
+## OptionalDeps: NetherBars
+## X-Curse-Project-Name: Azerothian Relic
+## X-Requires: NetherUI 2.0.0 or newer
+## SavedVariables: AzerothianRelicDB
+## X-License: All Rights Reserved
+
+# ------------------------------------------------------------------------------------------
+# Azerothian Relic is a plugin for NetherUI (folder NetherUI). "## Dependencies: NetherUI"
+# makes the game load NetherUI first, and refuse to load the Relic without it. NetherBars is
+# optional: when it is installed, the Relic adds a matching nameplate theme to it.
+# 16001 = WoW: Forever 1.60.x; 12xxxx = retail Midnight (same API).
+# ------------------------------------------------------------------------------------------
+
+RelicData.lua
+Relic.lua
